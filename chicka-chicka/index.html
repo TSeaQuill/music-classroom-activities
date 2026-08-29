@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Chicka Chicka Boom Boom — Letters &amp; Shapes</title>
+  <style>
+    :root {
+      --gold: #f5b92f;
+      --pink: #d24a8c;
+      --purple: #8519e8;
+      --ink: #351329;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #8a5b17;
+      font-family: "Arial Rounded MT Bold", "Trebuchet MS", Arial, sans-serif;
+    }
+
+    body {
+      display: grid;
+      place-items: center;
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .app {
+      width: 100%;
+      height: 100%;
+      display: grid;
+      grid-template-rows: minmax(0, 1fr) auto;
+      background: linear-gradient(180deg, #b7781d, #754913);
+    }
+
+    .stage-wrap {
+      min-height: 0;
+      display: grid;
+      place-items: center;
+      padding: 8px;
+    }
+
+    .stage {
+      position: relative;
+      width: min(100%, calc((100vh - 78px) * 16 / 9));
+      max-height: 100%;
+      aspect-ratio: 16 / 9;
+      overflow: hidden;
+      container-type: inline-size;
+      background: #fff url("chicka-background.png") center / 100% 100% no-repeat;
+      border: 2px solid rgba(255, 255, 255, 0.88);
+      box-shadow: 0 10px 34px rgba(53, 19, 41, 0.34);
+      cursor: pointer;
+      outline: none;
+    }
+
+    .stage:focus-visible {
+      box-shadow:
+        0 0 0 5px #fff,
+        0 0 0 10px var(--pink),
+        0 10px 34px rgba(53, 19, 41, 0.34);
+    }
+
+    .falling-letter {
+      --drop-x: 43.75%;
+      --start-y: 27.4%;
+      --ground-y: 89.8%;
+      position: absolute;
+      z-index: 4;
+      left: var(--drop-x);
+      top: var(--start-y);
+      width: auto;
+      height: 7.4cqw;
+      max-height: 15.2%;
+      object-fit: contain;
+      transform: translate(-50%, -50%) scale(0.72);
+      transform-origin: 50% 100%;
+      pointer-events: none;
+      will-change: top, transform, opacity;
+      filter: drop-shadow(0.025em 0.05em 0 rgba(58, 27, 18, 0.18));
+    }
+
+    .falling-letter.drop {
+      animation: straight-drop 1.2s cubic-bezier(.24, .72, .3, 1) forwards;
+    }
+
+    @keyframes straight-drop {
+      0% {
+        top: var(--start-y);
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.7);
+      }
+      8% {
+        opacity: 1;
+      }
+      70% {
+        top: calc(var(--ground-y) - 4%);
+        transform: translate(-50%, -100%) scale(1);
+      }
+      84% {
+        top: calc(var(--ground-y) + 0.8%);
+        transform: translate(-50%, -100%) scale(1.07, 0.9);
+      }
+      93% {
+        top: calc(var(--ground-y) - 0.7%);
+        transform: translate(-50%, -100%) scale(0.98, 1.03);
+      }
+      100% {
+        top: var(--ground-y);
+        opacity: 1;
+        transform: translate(-50%, -100%) scale(1);
+      }
+    }
+
+    .controls {
+      min-height: 70px;
+      padding:
+        8px max(12px, env(safe-area-inset-right))
+        max(8px, env(safe-area-inset-bottom))
+        max(12px, env(safe-area-inset-left));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      background: var(--gold);
+      border-top: 5px dotted var(--pink);
+      color: var(--ink);
+    }
+
+    .instruction {
+      margin: 0;
+      font-size: clamp(14px, 2.2vw, 20px);
+      font-weight: 900;
+      text-align: center;
+    }
+
+    .key {
+      display: inline-block;
+      min-width: 5.8em;
+      margin: 0 0.12em;
+      padding: 0.24em 0.52em;
+      border: 2px solid #ab346e;
+      border-bottom-width: 5px;
+      border-radius: 10px;
+      background: #fff7dc;
+      color: #8a2056;
+      letter-spacing: 0.04em;
+    }
+
+    button {
+      min-height: 46px;
+      padding: 10px 16px;
+      border: 0;
+      border-bottom: 5px solid #7c1b50;
+      border-radius: 15px;
+      color: #fff;
+      font: 900 16px/1 "Arial Rounded MT Bold", "Trebuchet MS", Arial, sans-serif;
+      cursor: pointer;
+    }
+
+    button:active {
+      transform: translateY(3px);
+      border-bottom-width: 2px;
+    }
+
+    .drop-button {
+      background: var(--pink);
+    }
+
+    .mode-button {
+      min-width: 142px;
+      background: var(--purple);
+      border-bottom-color: #541196;
+    }
+
+    .mode-button[aria-pressed="true"] {
+      background: #168b55;
+      border-bottom-color: #0b5936;
+    }
+
+    .status {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @media (max-width: 720px), (max-height: 540px) {
+      .controls {
+        min-height: 56px;
+        padding-top: 5px;
+        padding-bottom: max(5px, env(safe-area-inset-bottom));
+        gap: 7px;
+      }
+
+      .instruction .desktop-only {
+        display: none;
+      }
+
+      button {
+        min-height: 40px;
+        padding: 8px 12px;
+        font-size: 14px;
+      }
+
+      .mode-button {
+        min-width: 126px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .falling-letter.drop {
+        animation-duration: 0.38s;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <div class="stage-wrap">
+      <section
+        id="stage"
+        class="stage"
+        tabindex="0"
+        role="button"
+        aria-label="Coconut letter tree. Press the space bar or tap to drop the next capital letter."
+      >
+        <p id="status" class="status" aria-live="polite">A to Z mode. Ready for letter A.</p>
+      </section>
+    </div>
+
+    <div class="controls">
+      <p class="instruction">
+        <span class="desktop-only">Press <span class="key">SPACE BAR</span> or </span>tap the picture
+      </p>
+      <button id="dropButton" class="drop-button" type="button">DROP LETTER</button>
+      <button id="modeButton" class="mode-button" type="button" aria-pressed="false">ORDER: A–Z</button>
+    </div>
+  </main>
+
+  <script>
+    (() => {
+      const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+      const stage = document.getElementById("stage");
+      const dropButton = document.getElementById("dropButton");
+      const modeButton = document.getElementById("modeButton");
+      const status = document.getElementById("status");
+
+      let orderedIndex = 0;
+      let randomMode = false;
+      let currentLetter = null;
+      let currentCharacter = null;
+      let busy = false;
+
+      alphabet.forEach((character) => {
+        const preload = new Image();
+        preload.src = `letters/${character}.png`;
+      });
+
+      function chooseCharacter() {
+        if (!randomMode) {
+          const character = alphabet[orderedIndex];
+          orderedIndex = (orderedIndex + 1) % alphabet.length;
+          return character;
+        }
+
+        let character;
+        do {
+          character = alphabet[Math.floor(Math.random() * alphabet.length)];
+        } while (alphabet.length > 1 && character === currentCharacter);
+        return character;
+      }
+
+      function finishDrop(letter, character) {
+        if (currentLetter !== letter) return;
+        busy = false;
+        const modeName = randomMode ? "Random" : "A to Z";
+        status.textContent = `${modeName} mode. Capital letter ${character} is on the ground.`;
+      }
+
+      function dropNextLetter() {
+        if (busy) return;
+        busy = true;
+
+        if (currentLetter) {
+          currentLetter.remove();
+          currentLetter = null;
+        }
+
+        const character = chooseCharacter();
+        const letter = document.createElement("img");
+        letter.className = "falling-letter drop";
+        letter.src = `letters/${character}.png`;
+        letter.alt = "";
+        letter.setAttribute("aria-hidden", "true");
+        stage.appendChild(letter);
+
+        currentLetter = letter;
+        currentCharacter = character;
+        status.textContent = `Capital letter ${character} is falling from the coconuts.`;
+
+        let finished = false;
+        const complete = () => {
+          if (finished) return;
+          finished = true;
+          finishDrop(letter, character);
+        };
+
+        letter.addEventListener("animationend", complete, { once: true });
+        window.setTimeout(complete, 1450);
+      }
+
+      function toggleMode() {
+        randomMode = !randomMode;
+        modeButton.setAttribute("aria-pressed", String(randomMode));
+        modeButton.textContent = randomMode ? "ORDER: RANDOM" : "ORDER: A–Z";
+        const modeName = randomMode ? "Random" : "A to Z";
+        const groundMessage = currentCharacter ? ` Letter ${currentCharacter} remains on the ground.` : "";
+        status.textContent = `${modeName} mode selected.${groundMessage}`;
+        stage.focus({ preventScroll: true });
+      }
+
+      window.addEventListener("keydown", (event) => {
+        if (event.code !== "Space" || event.repeat) return;
+        event.preventDefault();
+        dropNextLetter();
+      });
+
+      stage.addEventListener("click", dropNextLetter);
+      dropButton.addEventListener("click", dropNextLetter);
+      modeButton.addEventListener("click", toggleMode);
+      stage.focus({ preventScroll: true });
+    })();
+  </script>
+</body>
+</html>

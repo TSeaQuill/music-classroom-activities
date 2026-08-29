@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Coppernickel Goes Mondrian, Music in Art</title>
+
+<style>
+:root{
+  --red:#e6322f;
+  --blue:#5f8fca;
+  --yellow:#fff39b;
+  --cream:#f5eee2;
+  --ink:#181512;
+  --gold:#b48632;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{
+  margin:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  font-family:Arial,Helvetica,sans-serif;
+  color:var(--ink);
+}
+body{
+  background:
+    radial-gradient(circle at 20% 0%,rgba(255,255,255,.45),transparent 26%),
+    radial-gradient(circle at 80% 0%,rgba(255,255,255,.35),transparent 24%),
+    repeating-linear-gradient(90deg,rgba(255,255,255,.025) 0 2px,rgba(0,0,0,.012) 2px 4px),
+    linear-gradient(#eee7dc,#ded5c8);
+}
+
+/* Four gallery spotlights with visible light beams */
+.gallery-lights{
+  position:fixed;
+  inset:0 0 auto 0;
+  height:46vh;
+  min-height:260px;
+  pointer-events:none;
+  z-index:2;
+  overflow:visible;
+}
+.light{
+  position:absolute;
+  top:0;
+  width:25%;
+  height:46vh;
+  min-height:260px;
+  transform:translateX(-50%);
+}
+.light::before{
+  content:"";
+  position:absolute;
+  left:50%;
+  top:0;
+  width:34px;
+  height:34px;
+  transform:translateX(-50%);
+  background:linear-gradient(90deg,#151412,#45413b 45%,#111 100%);
+  border-radius:3px 3px 12px 12px;
+  box-shadow:0 3px 5px rgba(0,0,0,.45), inset 0 -4px 5px rgba(0,0,0,.45);
+}
+/* The actual visible cone of warm gallery light */
+.light::after{
+  content:"";
+  position:absolute;
+  left:50%;
+  top:22px;
+  width:285px;
+  height:42vh;
+  min-height:235px;
+  transform:translateX(-50%);
+  clip-path:polygon(46% 0,54% 0,100% 100%,0 100%);
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,250,220,.58) 0%,
+      rgba(255,247,208,.36) 28%,
+      rgba(255,244,198,.20) 64%,
+      rgba(255,243,195,.04) 100%
+    );
+  filter:blur(5px);
+  opacity:1;
+}
+/* Soft pool of light where each beam reaches the exhibit */
+.light .glow{
+  position:absolute;
+  left:50%;
+  top:30vh;
+  width:300px;
+  height:170px;
+  transform:translateX(-50%);
+  border-radius:50%;
+  background:radial-gradient(
+    ellipse,
+    rgba(255,248,215,.23) 0%,
+    rgba(255,246,210,.11) 48%,
+    transparent 74%
+  );
+  filter:blur(7px);
+}
+.light.l1{left:10%}
+.light.l4{left:90%}
+
+.museum{
+  position:relative;
+  z-index:3;
+  height:100dvh;
+  padding:10px 16px 14px;
+  display:grid;
+  grid-template-columns:250px minmax(0,1fr) 130px;
+  grid-template-rows:auto 1fr;
+  gap:10px 16px;
+}
+
+.title-area{
+  grid-column:1/-1;
+  text-align:center;
+  padding:4px 0 0;
+}
+.title-area h1{
+  margin:0;
+  font-size:clamp(2rem,4vw,3.9rem);
+  line-height:.95;
+  font-weight:900;
+  letter-spacing:-.035em;
+}
+.title-area h2{
+  margin:8px 0 0;
+  font-size:clamp(1rem,2vw,1.8rem);
+  letter-spacing:.45em;
+  color:#9f231e;
+  font-weight:800;
+}
+
+.left-panel{
+  min-height:0;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  gap:12px;
+}
+.info-card{
+  background:#f8f3eb;
+  border:1px solid #bdb4a8;
+  box-shadow:0 6px 14px rgba(0,0,0,.14);
+  padding:18px 18px 14px;
+  position:relative;
+}
+.info-card:before,.info-card:after{
+  content:"";
+  position:absolute;
+  top:10px;
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:#8d8175;
+  box-shadow:inset 0 0 0 2px #c8beb2;
+}
+.info-card:before{left:10px}
+.info-card:after{right:10px}
+.info-card h3{
+  margin:0 0 12px;
+  font-size:1rem;
+  letter-spacing:.03em;
+}
+.info-card p,.info-card li{
+  font-size:.96rem;
+  line-height:1.45;
+}
+.info-card ol{
+  margin:10px 0 0;
+  padding-left:22px;
+}
+.info-card li{margin:8px 0}
+.info-card li::marker{color:#a62822;font-weight:900}
+.signature{
+  margin-top:16px;
+  font-family:"Brush Script MT","Segoe Script",cursive;
+  font-size:1.8rem;
+}
+.dates{
+  font-size:.86rem;
+  text-align:center;
+  margin-top:-6px;
+}
+.brass{
+  align-self:center;
+  width:180px;
+  background:linear-gradient(#c4963d,#a67420);
+  border:1px solid #6c4c19;
+  color:#16110a;
+  text-align:center;
+  padding:8px 10px;
+  font-size:.72rem;
+  line-height:1.3;
+  box-shadow:0 4px 8px rgba(0,0,0,.25);
+}
+
+/* No legend row now — composition gets the full center height */
+.center{
+  min-width:0;
+  min-height:0;
+  display:flex;
+}
+.art-frame{
+  width:100%;
+  min-height:0;
+  background:linear-gradient(145deg,#4a4037,#1d1916 55%,#3a312b);
+  padding:8px;
+  box-shadow:0 7px 16px rgba(0,0,0,.26);
+  border:2px solid #5b4b3e;
+}
+.grid{
+  width:100%;
+  height:100%;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  grid-template-rows:repeat(3,1fr);
+  gap:8px;
+  background:#000;
+}
+.cell{
+  border:0;
+  padding:0;
+  min-width:0;
+  min-height:0;
+  background:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+}
+.cell.red{background:var(--red)}
+.cell.blue{background:var(--blue)}
+.cell.yellow{background:var(--yellow)}
+.cell.white{background:#fff}
+
+.mark{
+  display:none;
+  width:86%;
+  height:86%;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+}
+.show-rhythm .mark{display:flex}
+
+.note-svg{
+  width:56%;
+  height:56%;
+  max-height:92px;
+  overflow:visible;
+}
+.rest-img{
+  width:26%;
+  height:52%;
+  object-fit:contain;
+}
+.rhythm-label{
+  margin-top:-3px;
+  font-family:"Trebuchet MS",Arial,sans-serif;
+  font-size:clamp(.95rem,2vw,1.45rem);
+  font-weight:800;
+  line-height:1;
+  letter-spacing:-.03em;
+}
+.red .rhythm-label{color:#fff}
+.blue .rhythm-label{color:#234f9c}
+.yellow .rhythm-label{color:#656e27}
+.white .rhythm-label{color:#111}
+
+.right-panel{
+  min-height:0;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap:18px;
+}
+.exhibit-button{
+  min-height:105px;
+  border:2px solid #b08a52;
+  background:#faf6ef;
+  box-shadow:0 4px 10px rgba(0,0,0,.16);
+  font-size:1rem;
+  font-weight:800;
+  padding:8px;
+}
+.exhibit-button .icon{
+  display:block;
+  font-size:2rem;
+  margin-bottom:5px;
+}
+#showBtn{display:block}
+#hideBtn{display:none}
+
+.backdrop{
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:20;
+  background:rgba(25,22,19,.6);
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+}
+.backdrop.open{display:flex}
+.picker{
+  width:min(760px,96vw);
+  background:#f5eee2;
+  border:1px solid #9a8d7f;
+  padding:16px;
+  box-shadow:0 20px 60px rgba(0,0,0,.4);
+}
+.picker h3{
+  text-align:center;
+  font:500 1.5rem Georgia,serif;
+  margin:0 0 12px;
+}
+.choices{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+}
+.choice{
+  aspect-ratio:1.2;
+  border:2px solid #111;
+  padding:8px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+}
+.choice.white{background:#fff}
+.choice.yellow{background:var(--yellow)}
+.choice.blue{background:var(--blue)}
+.choice.red{background:var(--red)}
+.choice>.note-svg,.choice>.rest-img,.choice>.rhythm-label{display:none}
+.show-rhythm .choice>.note-svg,
+.show-rhythm .choice>.rest-img,
+.show-rhythm .choice>.rhythm-label{display:block}
+.cancel{
+  display:block;
+  margin:12px auto 0;
+  padding:9px 18px;
+  background:#e3dacd;
+  border:1px solid #8b7f72;
+}
+
+@media(max-width:1050px){
+  .museum{grid-template-columns:200px minmax(0,1fr) 105px}
+  .right-panel{gap:10px}
+  .exhibit-button{min-height:85px;font-size:.88rem}
+}
+@media(max-width:800px){
+  .museum{
+    grid-template-columns:1fr;
+    grid-template-rows:auto 1fr auto;
+    overflow:hidden;
+    padding:6px;
+    gap:6px;
+  }
+  .title-area{grid-column:1}
+  .left-panel{display:none}
+  .center{grid-row:2;min-height:0}
+  .right-panel{
+    grid-row:3;
+    flex-direction:row;
+    gap:6px;
+  }
+  .exhibit-button{
+    min-height:48px;
+    flex:1;
+    font-size:.75rem;
+    padding:5px;
+  }
+  .exhibit-button .icon{display:none}
+  .choices{grid-template-columns:repeat(2,1fr)}
+}
+@media(orientation:landscape) and (max-height:700px){
+  .museum{
+    grid-template-columns:170px minmax(0,1fr) 92px;
+    grid-template-rows:auto 1fr;
+    padding:4px 8px 6px;
+    gap:5px 8px;
+  }
+  .title-area h1{font-size:2rem}
+  .title-area h2{font-size:.8rem;margin-top:3px}
+  .info-card{padding:10px}
+  .info-card h3{font-size:.8rem;margin-bottom:4px}
+  .info-card p,.info-card li{font-size:.69rem;line-height:1.25}
+  .info-card li{margin:3px 0}
+  .signature{font-size:1.2rem;margin-top:6px}
+  .brass{font-size:.6rem;width:140px}
+  .right-panel{gap:7px}
+  .exhibit-button{min-height:68px;font-size:.72rem}
+  .exhibit-button .icon{font-size:1.35rem}
+  .art-frame{padding:5px}
+  .grid{gap:5px}
+  .gallery-lights{height:82px}
+  .light{height:82px}
+  .light::after{height:64px;width:130px}
+}
+
+#playBtn.playing{
+  background:#8f241f;
+  color:#fff;
+  border-color:#6d1713;
+}
+
+</style>
+</head>
+
+<body>
+<div class="gallery-lights" aria-hidden="true">
+  <div class="light l1"><span class="glow"></span></div>
+  <div class="light l4"><span class="glow"></span></div>
+</div>
+
+<div class="museum">
+  <div class="title-area">
+    <h1>Coppernickel Goes Mondrian</h1>
+    <h2>MUSIC IN ART</h2>
+  </div>
+
+  <aside class="left-panel">
+    <div class="info-card">
+      <h3>ABOUT THE ART</h3>
+      <p>Piet Mondrian was an artist who used simple shapes and primary colors to create balance and harmony.</p>
+
+      <h3 style="margin-top:24px">YOUR MISSION</h3>
+      <p>Create your own Mondrian masterpiece!</p>
+      <ol>
+        <li>Tap any white rectangle in the artwork.</li>
+        <li>Choose a color.</li>
+        <li>Use “Show Rhythm” to see the music hidden in your art!</li>
+      </ol>
+
+      <div class="signature">P. Mondrian</div>
+      <div class="dates">1872–1944</div>
+    </div>
+
+    <div class="brass">
+      PIET MONDRIAN<br>
+      COMPOSITION WITH RED,<br>
+      BLUE, AND YELLOW<br>
+    </div>
+  </aside>
+
+  <main class="center">
+    <div class="art-frame">
+      <div class="grid" id="grid"></div>
+    </div>
+  </main>
+
+  <aside class="right-panel">
+    
+    <button class="exhibit-button" id="playBtn">
+      <span class="icon">▶</span>Play<br>Boogie
+    </button>
+<button class="exhibit-button" id="showBtn">
+      <span class="icon">◉</span>Show<br>Rhythm
+    </button>
+
+    <button class="exhibit-button" id="hideBtn">
+      <span class="icon">◌</span>Hide<br>Rhythm
+    </button>
+
+    <button class="exhibit-button" id="clearBtn">
+      <span class="icon">⌫</span>Clear<br>Canvas
+    </button>
+
+    <button class="exhibit-button" id="fullscreenBtn">
+      <span class="icon">⛶</span>Full<br>Screen
+    </button>
+  </aside>
+</div>
+
+
+<audio id="boogieAudio" preload="auto" src="boogie-breakdown.mp3"></audio>
+
+<div class="backdrop" id="backdrop">
+  <div class="picker">
+    <h3 id="pickerTitle">Choose a Color</h3>
+
+    <div class="choices">
+      <button class="choice white" data-color="white"></button>
+      <button class="choice yellow" data-color="yellow"></button>
+      <button class="choice blue" data-color="blue"></button>
+      <button class="choice red" data-color="red"></button>
+    </div>
+
+    <button class="cancel" id="cancel">Cancel</button>
+  </div>
+</div>
+
+<script>
+const grid=document.getElementById('grid');
+const backdrop=document.getElementById('backdrop');
+const showBtn=document.getElementById('showBtn');
+const hideBtn=document.getElementById('hideBtn');
+const clearBtn=document.getElementById('clearBtn');
+const fullscreenBtn=document.getElementById('fullscreenBtn');
+const playBtn=document.getElementById('playBtn');
+const boogieAudio=document.getElementById('boogieAudio');
+
+let selected=null;
+let show=false;
+
+function quarterNoteSVG(){
+  return `
+  <svg class="note-svg" viewBox="0 0 120 120" aria-hidden="true">
+    <ellipse cx="48" cy="84" rx="18" ry="12"
+      transform="rotate(-18 48 84)" fill="#111"/>
+    <rect x="64" y="18" width="5" height="67" fill="#111"/>
+  </svg>`;
+}
+
+function eighthPairSVG(){
+  return `
+  <svg class="note-svg" viewBox="0 0 140 120" aria-hidden="true">
+    <ellipse cx="34" cy="88" rx="17" ry="11"
+      transform="rotate(-18 34 88)" fill="#111"/>
+    <ellipse cx="98" cy="88" rx="17" ry="11"
+      transform="rotate(-18 98 88)" fill="#111"/>
+    <rect x="49" y="22" width="5" height="64" fill="#111"/>
+    <rect x="113" y="22" width="5" height="64" fill="#111"/>
+    <rect x="49" y="18" width="69" height="8" fill="#111"/>
+  </svg>`;
+}
+
+function restPNG(){
+  return `<img class="rest-img" src="quarter-rest.png" alt="" aria-hidden="true">`;
+}
+
+function label(text){
+  return `<div class="rhythm-label">${text}</div>`;
+}
+
+function markup(color){
+  if(color==='white') return `<div class="mark">${restPNG()}${label('White')}</div>`;
+  if(color==='yellow') return `<div class="mark">${eighthPairSVG()}${label('Yellow')}</div>`;
+  if(color==='blue') return `<div class="mark">${quarterNoteSVG()}${label('Blue')}</div>`;
+  return `<div class="mark">${quarterNoteSVG()}${label('Red')}</div>`;
+}
+
+function choiceMarkup(color){
+  /* IMPORTANT: White now uses the rest PNG + ONE HTML label only.
+     No duplicate "White" can appear. */
+  if(color==='white') return `${restPNG()}${label('White')}`;
+  if(color==='yellow') return `${eighthPairSVG()}${label('Yellow')}`;
+  if(color==='blue') return `${quarterNoteSVG()}${label('Blue')}`;
+  return `${quarterNoteSVG()}${label('Red')}`;
+}
+
+function build(){
+  grid.innerHTML='';
+  for(let i=0;i<12;i++){
+    const cell=document.createElement('button');
+    cell.className='cell white';
+    cell.type='button';
+    cell.setAttribute('aria-label',`Rectangle ${i+1}, blank`);
+
+    cell.onclick=()=>{
+      selected=cell;
+      document.getElementById('pickerTitle').textContent=
+        show ? 'Choose a Color and Rhythm' : 'Choose a Color';
+      backdrop.classList.add('open');
+    };
+
+    grid.appendChild(cell);
+  }
+}
+
+function setCell(cell,color){
+  cell.className='cell '+color;
+  cell.innerHTML=markup(color);
+}
+
+document.querySelectorAll('.choice').forEach(btn=>{
+  const color=btn.dataset.color;
+  btn.innerHTML=choiceMarkup(color);
+
+  btn.onclick=()=>{
+    if(selected) setCell(selected,color);
+    selected=null;
+    backdrop.classList.remove('open');
+  };
+});
+
+
+function forceShowRhythm(){
+  show=true;
+  document.body.classList.add('show-rhythm');
+  showBtn.style.display='none';
+  hideBtn.style.display='block';
+}
+
+playBtn.onclick=async()=>{
+  if(boogieAudio.paused){
+    forceShowRhythm();
+    try{
+      boogieAudio.currentTime=0;
+      await boogieAudio.play();
+      playBtn.classList.add('playing');
+      playBtn.innerHTML='<span class="icon">■</span>Stop<br>Boogie';
+    }catch(e){}
+  }else{
+    boogieAudio.pause();
+    boogieAudio.currentTime=0;
+    playBtn.classList.remove('playing');
+    playBtn.innerHTML='<span class="icon">▶</span>Play<br>Boogie';
+  }
+};
+
+boogieAudio.addEventListener('ended',()=>{
+  playBtn.classList.remove('playing');
+  playBtn.innerHTML='<span class="icon">▶</span>Play<br>Boogie';
+});
+
+
+showBtn.onclick=()=>{
+  show=true;
+  document.body.classList.add('show-rhythm');
+  showBtn.style.display='none';
+  hideBtn.style.display='block';
+};
+
+hideBtn.onclick=()=>{
+  show=false;
+  document.body.classList.remove('show-rhythm');
+  hideBtn.style.display='none';
+  showBtn.style.display='block';
+};
+
+clearBtn.onclick=build;
+
+document.getElementById('cancel').onclick=()=>{
+  selected=null;
+  backdrop.classList.remove('open');
+};
+
+backdrop.onclick=e=>{
+  if(e.target===backdrop){
+    selected=null;
+    backdrop.classList.remove('open');
+  }
+};
+
+fullscreenBtn.onclick=async()=>{
+  try{
+    if(document.fullscreenElement){
+      await document.exitFullscreen();
+    }else{
+      await document.documentElement.requestFullscreen();
+    }
+  }catch(e){}
+};
+
+document.addEventListener('fullscreenchange',()=>{
+  fullscreenBtn.innerHTML=document.fullscreenElement
+    ? `<span class="icon">⛶</span>Exit<br>Full Screen`
+    : `<span class="icon">⛶</span>Full<br>Screen`;
+});
+
+build();
+</script>
+</body>
+</html>

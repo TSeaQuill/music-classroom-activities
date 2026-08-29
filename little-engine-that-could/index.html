@@ -1,0 +1,881 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>The Little Engine That Could – Tempos</title>
+<style>
+:root{
+  --wood:#4b2e1c;
+  --panel:#17191a;
+  --panel2:#292b2c;
+  --metal:#c9c1b0;
+  --cream:#ead9b8;
+  --text:#2f271f;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:#eee8dc;color:var(--text);font-family:Georgia,"Times New Roman",serif}
+body{padding:8px}
+.app{max-width:1440px;margin:0 auto}
+header{text-align:center;margin-bottom:7px}
+h1{
+  margin:0;
+  text-align:center;
+  color:#07518f;
+  font-size:clamp(30px,3.6vw,48px);
+  line-height:1;
+  letter-spacing:.01em;
+  font-weight:800;
+  text-shadow:
+    -1px -1px 0 #e5b84f,
+     1px -1px 0 #e5b84f,
+    -1px  1px 0 #e5b84f,
+     1px  1px 0 #e5b84f,
+     0 3px 0 #70431b;
+}
+.subtitle{
+  display:inline-block;
+  margin:5px auto 0;
+  padding:5px 22px 6px;
+  color:#fff2c7;
+  background:linear-gradient(#a6271d,#6f1712);
+  border:3px solid #d7a746;
+  border-radius:5px;
+  box-shadow:
+    0 2px 0 #704817,
+    inset 0 0 0 1px rgba(255,255,255,.18);
+  font:800 14px Georgia,"Times New Roman",serif;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+
+.main-layout{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 340px;
+  gap:12px;
+  align-items:start;
+}
+
+.scene{
+  position:relative;
+  width:100%;
+  aspect-ratio:1346/988;
+  overflow:hidden;
+  border:10px solid #51331f;
+  border-radius:6px;
+  background:#76845d;
+  box-shadow:
+    inset 0 0 0 3px #2b190f,
+    inset 0 0 0 5px #8a5c39,
+    0 5px 14px rgba(40,28,18,.20)
+}
+.scene-bg{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:fill;
+  display:block;
+  z-index:0
+}
+.train-layer{position:absolute;inset:0;z-index:2;pointer-events:none}
+.car{
+  position:absolute;left:0;top:0;display:block;
+  transform:translate(-50%,-50%);
+  transform-origin:center center;
+  filter:drop-shadow(0 3px 3px rgba(0,0,0,.35));
+  will-change:left,top,transform;
+}
+.car.engine{width:6.55%}
+.car.coal{width:3.70%}
+.car.logs{width:4.75%}
+.car.boxcar{width:5.30%}
+
+.grade-label{
+  position:absolute;z-index:4;top:3.5%;
+  padding:6px 11px;border-radius:7px;
+  background:rgba(246,229,194,.94);
+  border:2px solid rgba(91,63,40,.8);
+  box-shadow:0 2px 7px rgba(0,0,0,.2);
+  font-weight:800;letter-spacing:.04em;
+  font-size:clamp(12px,1.5vw,20px);
+}
+.grade-label small{
+  display:block;font:600 .58em system-ui,sans-serif;
+  letter-spacing:0;margin-top:2px;color:#40362e
+}
+.rall-label{left:12%;color:#752f25}
+.accel-label{right:10%;color:#225985}
+.status{
+  position:absolute;left:50%;bottom:2.5%;z-index:5;
+  transform:translateX(-50%);
+  padding:6px 12px;border-radius:999px;
+  background:rgba(20,20,20,.86);color:white;
+  border:1px solid rgba(255,244,220,.65);
+  white-space:nowrap;
+  font:700 clamp(11px,1.2vw,15px) system-ui,sans-serif
+}
+
+.controller-wrap{
+  background:linear-gradient(#17324c,#0d2033);
+  padding:7px;
+  border:3px solid #b7832f;
+  border-radius:12px;
+  box-shadow:
+    0 7px 18px rgba(30,20,12,.26),
+    inset 0 0 0 2px #09213a;
+  position:sticky;
+  top:8px
+}
+.controller{
+  background:linear-gradient(var(--panel2),var(--panel));
+  border:3px solid #777066;border-radius:11px;
+  box-shadow:inset 0 0 0 2px #070808;
+  padding:10px;display:grid;grid-template-columns:1fr;gap:10px;
+}
+.controller section{border-bottom:1px solid #4b4b46;padding-bottom:10px}
+.controller section:last-child{border-bottom:0;padding-bottom:0}
+.plate{
+  text-align:center;
+  background:linear-gradient(#0f5489,#07365d);
+  color:#ffe7a5;
+  border:2px solid #c59032;
+  border-radius:5px;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.12),
+    0 1px 0 #4a2f10;
+  padding:4px 6px;
+  margin-bottom:6px;
+  font-weight:800;
+  letter-spacing:.07em;
+  font-size:13px
+}
+.gauge{
+  position:relative;width:min(235px,100%);aspect-ratio:1.4/1;margin:auto;
+  background:linear-gradient(#e8dfcd,#c6baa6);
+  border:5px solid #6b6256;border-radius:50% 50% 22% 22%;
+  color:#211d18;box-shadow:inset 0 0 16px rgba(55,45,36,.2)
+}
+.glabel{position:absolute;font:800 11px system-ui,sans-serif;text-align:center}
+.gl1{left:3%;bottom:22%}.gl2{left:10%;top:25%}.gl3{left:50%;top:8%;transform:translateX(-50%)}
+.gl4{right:8%;top:25%}.gl5{right:1%;bottom:22%}
+.needle{
+  position:absolute;
+  left:50%;
+  bottom:22%;
+  width:6px;
+  height:44%;
+  background:linear-gradient(#f04b3d,#c92f24);
+  border:2px solid #3b241d;
+  border-radius:5px 5px 2px 2px;
+  transform-origin:50% 100%;
+  box-shadow:0 1px 1px rgba(255,255,255,.25);
+  transition:transform .22s ease
+}
+.knob{
+  position:absolute;
+  left:50%;
+  bottom:13%;
+  transform:translateX(-50%);
+  width:48px;
+  height:48px;
+  border-radius:50%;
+  background:radial-gradient(circle at 38% 34%,#5f5b55,#181817 72%);
+  border:4px solid #090909;
+  box-shadow:
+    inset 0 0 0 3px #5b564f,
+    0 2px 3px rgba(0,0,0,.35);
+  z-index:3
+}
+.throttle-box{
+  position:relative;
+  height:clamp(205px,27vh,285px);
+  width:185px;
+  margin:auto;
+  background:linear-gradient(90deg,#aaa08d,#ded6c7,#aaa08d);
+  border:3px solid #4f473e;
+  border-radius:12px;
+  box-shadow:inset 0 0 0 2px #f5efe3;
+  touch-action:none;
+  user-select:none;
+  cursor:ns-resize;
+}
+.slot{
+  position:absolute;
+  left:68%;
+  top:18px;
+  bottom:18px;
+  width:30px;
+  transform:translateX(-50%);
+  background:#161616;
+  border:4px solid #5c554a;
+  border-radius:18px
+}
+
+.throttle-handle{
+  position:absolute;
+  left:68%;
+  top:50%;
+  width:72px;
+  height:26px;
+  transform:translate(-8%,-50%);
+  background:linear-gradient(#4b4b49,#171717);
+  border:3px solid #090909;
+  border-radius:8px 14px 14px 8px;
+  box-shadow:0 3px 5px rgba(0,0,0,.38),inset 0 1px 2px rgba(255,255,255,.18);
+  z-index:3;
+  pointer-events:none;
+  transition:top .14s ease
+}
+
+
+.throttle-box{
+  touch-action:none;
+  user-select:none;
+  cursor:ns-resize;
+}
+.throttle-box.dragging{
+  box-shadow:inset 0 0 0 2px #f5efe3,0 0 0 3px rgba(212,178,111,.55);
+}
+.throttle-handle{
+  left:50%;
+  width:70px;
+  height:26px;
+  transform:translate(-10%,-50%);
+}
+.mark-active{
+  background:#fff4c8;
+  border-radius:4px;
+  padding:1px 4px;
+  margin-left:-4px;
+  box-shadow:0 0 0 1px rgba(120,84,30,.25)
+}
+
+.marks{
+  position:absolute;
+  left:10px;
+  top:18px;
+  bottom:18px;
+  width:88px;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  align-items:flex-start;
+  font:800 11px system-ui,sans-serif;
+  color:#43392f;
+  z-index:2
+}
+.marks span:nth-child(1){color:#b53b2c}
+.marks span:nth-child(2){color:#a67723}
+.marks span:nth-child(3){color:#377d3c}
+.marks span:nth-child(4){color:#2c608d}
+.marks span:nth-child(5){color:#55418d}
+.buttons{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.bigbtn{
+  appearance:none;border:3px solid #080808;border-radius:50%;aspect-ratio:1;
+  font:800 14px system-ui,sans-serif;color:white;text-shadow:0 1px 2px #000;
+  box-shadow:inset 0 0 0 4px rgba(255,255,255,.08),0 4px 0 #070707;
+  cursor:pointer
+}
+.go{background:radial-gradient(circle at 35% 30%,#73eb7e,#19892a 55%,#0e4d17)}
+.stop{background:radial-gradient(circle at 35% 30%,#ff7b6b,#bb2b21 55%,#66150f)}
+.readout{
+  margin-top:7px;text-align:center;color:#f0ddb5;
+  font:800 13px system-ui,sans-serif;min-height:20px
+}
+.whistlebtn,.fullbtn{
+  width:100%;margin-top:7px;appearance:none;
+  border:2px solid #090909;border-radius:8px;
+  padding:8px 9px;font:800 12px system-ui,sans-serif;
+  letter-spacing:.05em;cursor:pointer;box-shadow:0 3px 0 #080808
+}
+.whistlebtn{background:linear-gradient(#c94a36,#8e261b);color:#fff2d2}
+.fullbtn{background:linear-gradient(#4a4c4d,#202223);color:#ead7ad}
+
+@media(max-width:900px){
+  .main-layout{grid-template-columns:minmax(0,1fr) 290px;gap:8px}
+  .controller-wrap{padding:7px}
+  .gauge{width:min(205px,100%)}
+}
+
+/* iPhone / narrow portrait */
+@media(max-width:700px){
+  body{padding:5px}
+  header{margin-bottom:5px}
+  h1{font-size:clamp(22px,7vw,30px)}
+  .subtitle{font-size:11px}
+  .main-layout{display:flex;flex-direction:column;gap:7px}
+  .scene{width:100%;border-width:7px}
+  .controller-wrap{position:static;width:100%;padding:6px}
+  .controller{
+    grid-template-columns:1fr 1fr;
+    gap:6px;padding:6px;
+  }
+  .controller section:nth-child(3){grid-column:1/-1}
+  .plate{font-size:10px;margin-bottom:4px}
+  .gauge{width:min(155px,100%)}
+  .glabel{font-size:8px}
+  .knob{width:38px;height:38px}
+  .throttle-box{height:145px;width:105px}
+    
+.throttle-handle{
+  position:absolute;
+  left:49%;
+  top:50%;
+  width:64px;
+  height:24px;
+  transform:translate(-12%,-50%);
+  background:linear-gradient(#4b4b49,#171717);
+  border:3px solid #090909;
+  border-radius:8px 14px 14px 8px;
+  box-shadow:0 3px 5px rgba(0,0,0,.38),inset 0 1px 2px rgba(255,255,255,.18);
+  z-index:3;
+  pointer-events:none;
+  transition:top .18s ease;
+}
+
+
+.throttle-box{
+  touch-action:none;
+  user-select:none;
+  cursor:ns-resize;
+}
+.throttle-box.dragging{
+  box-shadow:inset 0 0 0 2px #f5efe3,0 0 0 3px rgba(212,178,111,.55);
+}
+.throttle-handle{
+  left:50%;
+  width:70px;
+  height:26px;
+  transform:translate(-10%,-50%);
+}
+.mark-active{
+  text-decoration:underline;
+  text-decoration-thickness:2px;
+  text-underline-offset:2px;
+}
+
+.marks{font-size:9px}
+  .buttons{max-width:260px;margin:auto}
+  .bigbtn{font-size:12px}
+  .whistlebtn,.fullbtn{font-size:11px;padding:7px 6px}
+  .grade-label{font-size:10px;padding:4px 7px}
+  .status{font-size:10px;padding:4px 8px}
+}
+
+@media(max-width:430px){
+  .gauge{width:145px}
+  .controller{gap:5px}
+}
+
+:fullscreen body{padding:4px}
+:fullscreen .app{max-width:none}
+:fullscreen .main-layout{
+  grid-template-columns:minmax(0,1fr) 340px;
+  height:calc(100vh - 55px)
+}
+:fullscreen .scene{width:100%;height:auto;max-height:100%;align-self:center;justify-self:stretch}
+
+@media(min-width:701px){
+  html,body{height:100%;overflow:hidden}
+  body{padding:5px}
+  .app{
+    height:calc(100vh - 10px);
+    max-width:1600px;
+    display:grid;
+    grid-template-rows:auto minmax(0,1fr);
+  }
+  header{margin-bottom:4px}
+  h1{font-size:clamp(27px,3.2vh,42px)}
+  .subtitle{font-size:11px;padding:3px 14px 4px;margin-top:3px}
+  .main-layout{
+    min-height:0;
+    height:100%;
+    grid-template-columns:minmax(0,1fr) 325px;
+    gap:8px;
+    align-items:stretch;
+  }
+  .scene{
+    height:100%;
+    width:auto;
+    max-width:100%;
+    justify-self:center;
+    align-self:center;
+    border-width:9px;
+  }
+  .controller-wrap{
+    height:100%;
+    min-height:0;
+    position:static;
+    padding:6px;
+    overflow:hidden;
+  }
+  .controller{
+    height:100%;
+    min-height:0;
+    padding:7px;
+    gap:6px;
+    display:grid;
+    grid-template-rows:auto auto auto;
+    align-content:space-between;
+  }
+  .controller section{padding-bottom:6px}
+  .plate{padding:3px 5px;margin-bottom:4px;font-size:11px}
+  .gauge{width:min(190px,100%)}
+  .glabel{font-size:9px}
+  .knob{width:42px;height:42px}
+  .throttle-box{
+    width:185px;
+    height:clamp(190px,25vh,255px);
+    min-height:0;
+    max-height:none;
+  }
+  .marks{font-size:10px}
+  .buttons{gap:7px;max-width:240px;margin:auto}
+  .bigbtn{font-size:12px}
+  .readout{margin-top:4px;font-size:11px;min-height:16px}
+  .whistlebtn,.fullbtn{margin-top:5px;padding:6px 7px;font-size:10px}
+}
+.throttle-box.dragging{
+  box-shadow:inset 0 0 0 2px #f5efe3,0 0 0 3px rgba(212,178,111,.55);
+}
+.throttle-handle{
+  left:50%;
+  width:70px;
+  height:26px;
+  transform:translate(-10%,-50%);
+}
+.mark-active{
+  text-decoration:underline;
+  text-decoration-thickness:2px;
+  text-underline-offset:2px;
+}
+
+.marks{font-size:9px}
+  .buttons{gap:7px;max-width:240px;margin:auto}
+  .bigbtn{font-size:12px}
+  .readout{margin-top:4px;font-size:11px;min-height:16px}
+  .whistlebtn,.fullbtn{margin-top:5px;padding:6px 7px;font-size:10px}
+}
+
+
+:fullscreen .throttle-box{
+  width:195px !important;
+  height:clamp(250px,34vh,350px) !important;
+}
+:fullscreen .marks{font-size:11px}
+:fullscreen .controller{
+  align-content:space-between;
+}
+
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>The Little Engine That Could</h1>
+    <p class="subtitle">Tempo Mountain Railway</p>
+  </header>
+
+  <div class="main-layout">
+    <div class="scene">
+      <img class="scene-bg" src="assets/train-table-flat.png" alt="Realistic model railway table">
+      <div class="grade-label rall-label">RALLENTANDO<small>up the mountain</small></div>
+      <div class="grade-label accel-label">ACCELERANDO<small>down the mountain</small></div>
+      <div id="status" class="status">Andante</div>
+
+      <div class="train-layer" aria-hidden="true">
+        <img id="car0" class="car engine" src="assets/train-1.png" alt="">
+        <img id="car1" class="car coal" src="assets/train-2.png" alt="">
+        <img id="car2" class="car logs" src="assets/train-3.png" alt="">
+        <img id="car3" class="car boxcar" src="assets/train-4.png" alt="">
+      </div>
+
+      <svg width="0" height="0" viewBox="0 0 1448 1086" aria-hidden="true"
+           style="position:absolute;width:0;height:0;overflow:hidden;pointer-events:none">
+        <path id="motionPath"
+          d="M 824 958
+             C 650 960, 438 960, 255 956
+             C 165 954, 116 930, 91 877
+             C 72 835, 69 751, 70 652
+             C 71 557, 74 462, 84 394
+             C 94 326, 118 271, 161 240
+             C 205 208, 252 211, 299 232
+             C 342 251, 382 278, 428 281
+             C 474 284, 514 263, 551 237
+             C 589 211, 624 188, 668 176
+             C 713 164, 759 170, 804 189
+             C 849 208, 889 238, 931 267
+             C 975 298, 1025 325, 1082 333
+             C 1144 342, 1213 329, 1273 347
+             C 1325 363, 1360 399, 1377 447
+             C 1395 498, 1393 582, 1389 670
+             C 1386 759, 1377 835, 1351 884
+             C 1324 935, 1267 955, 1178 958
+             C 1065 961, 948 959, 824 958 Z"
+          fill="none"/>
+      </svg>
+    </div>
+
+    <div class="controller-wrap">
+      <div class="controller">
+        <section>
+          <div class="plate">TEMPO</div>
+          <div class="gauge">
+            <div class="glabel gl1">LARGO</div>
+            <div class="glabel gl2">ADAGIO</div>
+            <div class="glabel gl3">ANDANTE</div>
+            <div class="glabel gl4">ALLEGRO</div>
+            <div class="glabel gl5">PRESTO</div>
+            <div id="needle" class="needle"></div>
+            <div class="knob"></div>
+          </div>
+        </section>
+
+        <section>
+          <div class="plate">THROTTLE</div>
+          <div class="throttle-box">
+            <div class="slot"></div>
+            <div class="marks">
+              <span>PRESTO</span><span>ALLEGRO</span><span>ANDANTE</span><span>ADAGIO</span><span>LARGO</span>
+            </div>
+            <div id="throttleHandle" class="throttle-handle" aria-hidden="true"></div>
+            <input id="throttle" type="range" min="0" max="4" step="1" value="2" aria-label="Tempo throttle" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none">
+          </div>
+        </section>
+
+        <section>
+          <div class="plate">TRAIN CONTROL</div>
+          <div class="buttons">
+            <button id="goBtn" class="bigbtn go" type="button">GO</button>
+            <button id="stopBtn" class="bigbtn stop" type="button">STOP</button>
+          </div>
+          <div id="readout" class="readout">Andante</div>
+          <button id="whistleBtn" class="whistlebtn" type="button">WHISTLE</button>
+          <button id="fullBtn" class="fullbtn" type="button">FULL SCREEN</button>
+        </section>
+      </div>
+    </div>
+  </div>
+</div>
+
+<audio id="whistleAudio" preload="auto" src="assets/train-whistle.mp3"></audio>
+
+<script>
+(() => {
+  const tempos = [
+    {name:'Largo', speed:18},
+    {name:'Adagio', speed:44},
+    {name:'Andante', speed:82},
+    {name:'Allegro', speed:155},
+    {name:'Presto', speed:420}
+  ];
+
+  const cars = [0,1,2,3].map(i => document.getElementById('car'+i));
+  const throttle = document.getElementById('throttle');
+  const needle = document.getElementById('needle');
+  const throttleHandle = document.getElementById('throttleHandle');
+  const throttleBox = document.querySelector('.throttle-box');
+  const throttleMarks = [...document.querySelectorAll('.marks span')];
+  const status = document.getElementById('status');
+  const readout = document.getElementById('readout');
+  const whistleBtn = document.getElementById('whistleBtn');
+  const whistleAudio = document.getElementById('whistleAudio');
+  const fullBtn = document.getElementById('fullBtn');
+
+  // Dense rail-center trace. These points follow the visible center of the track,
+  // especially through the mountain S-curve and the upper-right bend.
+  const railPoints = [
+    [800,917],
+    [700,917],
+    [600,917],
+    [500,917],
+    [400,917],
+    [300,917],
+    [220,915],
+    [165,910],
+    [120,900],
+    [90,882],
+    [67,855],
+    [50,820],
+    [40,780],
+    [34,730],
+    [31,675],
+    [30,615],
+    [31,555],
+    [31,495],
+    [32,435],
+    [35,375],
+    [42,320],
+    [53,275],
+    [70,235],
+    [95,205],
+    [125,184],
+    [160,175],
+    [195,176],
+    [230,184],
+    [265,197],
+    [300,210],
+    [335,221],
+    [370,226],
+    [405,224],
+    [440,215],
+    [475,200],
+    [510,180],
+    [545,158],
+    [580,140],
+    [615,127],
+    [650,119],
+    [685,120],
+    [720,128],
+    [755,141],
+    [790,158],
+    [825,178],
+    [860,200],
+    [895,223],
+    [930,246],
+    [965,265],
+    [1000,280],
+    [1040,290],
+    [1080,296],
+    [1127,300],
+    [1167,306],
+    [1202,318],
+    [1233,338],
+    [1259,363],
+    [1279,392],
+    [1295,425],
+    [1307,462],
+    [1314,503],
+    [1319,548],
+    [1321,595],
+    [1321,642],
+    [1319,688],
+    [1315,732],
+    [1309,772],
+    [1298,811],
+    [1283,842],
+    [1266,867],
+    [1245,887],
+    [1220,900],
+    [1189,909],
+    [1152,914],
+    [1112,917],
+    [1068,919],
+    [1020,920],
+    [960,920],
+    [880,919],
+    [800,917]
+  ];
+
+  const railSegments = [];
+  let pathLen = 0;
+  for (let i = 0; i < railPoints.length - 1; i++) {
+    const a = railPoints[i];
+    const b = railPoints[i + 1];
+    const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    railSegments.push({a,b,start:pathLen,len});
+    pathLen += len;
+  }
+  const gaps = [0,62,116,177];
+  const needleAngles = [-90,-45,0,45,90];
+
+  let tempoIndex = 2;
+  let headDist = 0;
+  let running = false;
+  let motionState = 'stopped';
+  let driveFactor = 0;
+  let last = performance.now();
+
+  function base(){ return tempos[tempoIndex]; }
+
+  function pointAt(d){
+    d = ((d % pathLen) + pathLen) % pathLen;
+
+    // Find the traced rail segment containing this distance.
+    // With ~80 points this remains very light-weight even at animation speed.
+    let seg = railSegments[railSegments.length - 1];
+    for (let i = 0; i < railSegments.length; i++) {
+      if (d <= railSegments[i].start + railSegments[i].len) {
+        seg = railSegments[i];
+        break;
+      }
+    }
+
+    const local = seg.len ? (d - seg.start) / seg.len : 0;
+    return {
+      x: seg.a[0] + (seg.b[0] - seg.a[0]) * local,
+      y: seg.a[1] + (seg.b[1] - seg.a[1]) * local
+    };
+  }
+
+  function placeCar(group,d){
+    const p = pointAt(d);
+    const before = pointAt(d-4);
+    const after = pointAt(d+4);
+    const angle = Math.atan2(after.y-before.y,after.x-before.x)*180/Math.PI;
+
+    group.style.left = (p.x / 1346 * 100) + '%';
+    group.style.top = (p.y / 988 * 100) + '%';
+    group.style.transform = `translate(-50%,-50%) rotate(${angle}deg)`;
+  }
+
+  function placeTrain(){
+    cars.forEach((car,i)=>placeCar(car,headDist-gaps[i]));
+  }
+
+  function mountainFactor(p){
+    // Upper-left mountain climb: increasingly rallentando toward the apex.
+    if(p.y < 255 && p.x >= 120 && p.x < 660){
+      let u=(p.x-120)/(660-120);
+      u=Math.max(0,Math.min(1,u));
+      const smooth=u*u*(3-2*u);
+      status.textContent='Rallentando';
+      return 1-0.955*smooth;
+    }
+
+    // Upper-right mountain descent: accelerando away from the apex.
+    if(p.y < 330 && p.x >= 660 && p.x <= 1140){
+      let u=(p.x-660)/(1140-660);
+      u=Math.max(0,Math.min(1,u));
+      const smooth=u*u*(3-2*u);
+      status.textContent='Accelerando';
+      return 0.045+0.955*smooth;
+    }
+
+    status.textContent=base().name;
+    return 1;
+  }
+
+  function updateControls(){
+    throttle.value=tempoIndex;
+    needle.style.transform=`translateX(-50%) rotate(${needleAngles[tempoIndex]}deg)`;
+
+    // Range value runs Largo=0 to Presto=4, while the visual lever runs
+    // bottom (Largo) to top (Presto).
+    const handlePositions = [88,69,50,31,12];
+    throttleHandle.style.top = handlePositions[tempoIndex] + '%';
+
+    // Marks are displayed top-to-bottom Presto..Largo, while tempoIndex is Largo..Presto.
+    throttleMarks.forEach((mark, i) => {
+      mark.classList.toggle('mark-active', i === (4 - tempoIndex));
+    });
+
+    if(motionState==='stopped') readout.textContent=base().name;
+  }
+
+  function setTempoFromPointer(clientY){
+    const rect = throttleBox.getBoundingClientRect();
+    const y = Math.max(0, Math.min(rect.height, clientY - rect.top));
+    const pct = y / rect.height;
+
+    // Five evenly spaced stops from top Presto to bottom Largo.
+    const visualIndex = Math.max(0, Math.min(4, Math.round(pct * 4)));
+    tempoIndex = 4 - visualIndex;
+    throttle.value = tempoIndex;
+    updateControls();
+    if(motionState==='running') readout.textContent=base().name;
+  }
+
+  throttleBox.addEventListener('pointerdown', e => {
+    throttleBox.setPointerCapture(e.pointerId);
+    throttleBox.classList.add('dragging');
+    setTempoFromPointer(e.clientY);
+  });
+
+  throttleBox.addEventListener('pointermove', e => {
+    if (!throttleBox.hasPointerCapture(e.pointerId)) return;
+    setTempoFromPointer(e.clientY);
+  });
+
+  throttleBox.addEventListener('pointerup', e => {
+    if (throttleBox.hasPointerCapture(e.pointerId)) {
+      throttleBox.releasePointerCapture(e.pointerId);
+    }
+    throttleBox.classList.remove('dragging');
+  });
+
+  throttleBox.addEventListener('pointercancel', () => {
+    throttleBox.classList.remove('dragging');
+  });
+
+  throttle.addEventListener('input',()=>{
+    tempoIndex=Number(throttle.value);
+    updateControls();
+  });
+
+  document.getElementById('goBtn').addEventListener('click',()=>{
+    if(motionState==='stopped'||motionState==='stopping'){
+      motionState='starting';
+      running=true;
+      readout.textContent='Accelerando';
+    }
+  });
+
+  document.getElementById('stopBtn').addEventListener('click',()=>{
+    if(motionState!=='stopped'){
+      motionState='stopping';
+      running=true;
+      readout.textContent='Rallentando';
+    }
+  });
+
+  whistleBtn.addEventListener('click',()=>{
+    whistleAudio.pause();
+    whistleAudio.currentTime=0;
+    whistleAudio.play().catch(()=>{});
+  });
+
+  fullBtn.addEventListener('click',async()=>{
+    try{
+      if(!document.fullscreenElement) await document.documentElement.requestFullscreen();
+      else await document.exitFullscreen();
+    }catch(e){}
+  });
+
+  document.addEventListener('fullscreenchange',()=>{
+    fullBtn.textContent=document.fullscreenElement?'EXIT FULL SCREEN':'FULL SCREEN';
+  });
+
+  function frame(now){
+    const dt=Math.min(.04,(now-last)/1000);
+    last=now;
+
+    if(motionState==='starting'){
+      driveFactor=Math.min(1,driveFactor+dt*.34);
+      readout.textContent='Accelerando';
+      if(driveFactor>=1){
+        driveFactor=1;
+        motionState='running';
+        readout.textContent=base().name;
+      }
+    }else if(motionState==='stopping'){
+      driveFactor=Math.max(0,driveFactor-dt*.30);
+      readout.textContent='Rallentando';
+      if(driveFactor<=0){
+        driveFactor=0;
+        motionState='stopped';
+        running=false;
+        status.textContent='Stopped';
+        readout.textContent=base().name;
+      }
+    }
+
+    if(running && driveFactor>0){
+      const headPoint=pointAt(headDist);
+      const terrain=mountainFactor(headPoint);
+      const effectiveSpeed=base().speed*terrain*driveFactor;
+      headDist=(headDist+dt*effectiveSpeed*.82)%pathLen;
+      placeTrain();
+    }
+
+    requestAnimationFrame(frame);
+  }
+
+  updateControls();
+  placeTrain();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

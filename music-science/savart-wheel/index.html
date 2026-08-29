@@ -1,0 +1,1463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Savart Wheel Simulator</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    :root {
+      --navy: #08182e;
+      --navy-light: #12345c;
+      --panel: rgba(8, 27, 51, 0.88);
+      --panel-border: rgba(255, 255, 255, 0.18);
+      --gold: #f3bd52;
+      --gold-light: #ffe09a;
+      --cream: #fff8e8;
+      --blue: #62c6ff;
+      --green: #83e3a7;
+      --red: #ff857c;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      color: white;
+      background:
+        radial-gradient(circle at top left, rgba(58, 151, 217, 0.25), transparent 34%),
+        radial-gradient(circle at bottom right, rgba(243, 189, 82, 0.19), transparent 37%),
+        linear-gradient(145deg, #061225, #102f54 58%, #11172e);
+    }
+
+    header {
+      padding: 24px 18px 10px;
+      text-align: center;
+    }
+
+    header h1 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(2rem, 5vw, 3.6rem);
+      color: var(--gold-light);
+      text-shadow: 0 3px 14px rgba(0, 0, 0, 0.45);
+    }
+
+    header p {
+      max-width: 850px;
+      margin: 10px auto 0;
+      color: #dcecff;
+      line-height: 1.45;
+      font-size: 1rem;
+    }
+
+    main {
+      width: min(1180px, calc(100% - 24px));
+      margin: 12px auto 30px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.45fr) minmax(300px, 0.8fr);
+      gap: 18px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 22px;
+      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.32);
+      backdrop-filter: blur(8px);
+    }
+
+    .experiment-panel {
+      padding: 18px;
+    }
+
+    .wheel-stage {
+      position: relative;
+      min-height: 570px;
+      overflow: hidden;
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background:
+        linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+        radial-gradient(circle at 50% 42%, rgba(90, 164, 213, 0.21), transparent 46%),
+        linear-gradient(180deg, #102c4b, #071527);
+      background-size: 28px 28px, 28px 28px, auto, auto;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      min-height: 570px;
+      touch-action: none;
+    }
+
+    .instruction {
+      position: absolute;
+      left: 14px;
+      top: 14px;
+      max-width: 280px;
+      padding: 10px 13px;
+      border-radius: 12px;
+      background: rgba(3, 14, 29, 0.78);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      color: #edf7ff;
+      font-size: 0.88rem;
+      line-height: 1.35;
+      pointer-events: none;
+    }
+
+    .status-badge {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      padding: 9px 13px;
+      border-radius: 999px;
+      background: rgba(255, 133, 124, 0.16);
+      border: 1px solid rgba(255, 133, 124, 0.55);
+      color: #ffd8d4;
+      font-weight: bold;
+      pointer-events: none;
+    }
+
+    .status-badge.touching {
+      color: #caffdc;
+      border-color: rgba(131, 227, 167, 0.7);
+      background: rgba(131, 227, 167, 0.16);
+    }
+
+    .formula {
+      margin-top: 15px;
+      padding: 13px 15px;
+      border-radius: 14px;
+      text-align: center;
+      background: rgba(243, 189, 82, 0.1);
+      border: 1px solid rgba(243, 189, 82, 0.34);
+      color: #fff3ca;
+      font-size: 1rem;
+    }
+
+    .formula strong {
+      color: var(--gold-light);
+    }
+
+    .controls {
+      padding: 20px;
+    }
+
+    .controls h2 {
+      margin: 0 0 17px;
+      color: var(--gold-light);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.6rem;
+    }
+
+    .control-group {
+      margin-bottom: 19px;
+    }
+
+    .control-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 10px;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+
+    .control-value {
+      color: var(--gold-light);
+      font-variant-numeric: tabular-nums;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--gold);
+      cursor: pointer;
+    }
+
+    select {
+      width: 100%;
+      padding: 11px 12px;
+      color: white;
+      background: #102c4b;
+      border: 1px solid rgba(255, 255, 255, 0.23);
+      border-radius: 10px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    .button-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin: 12px 0 20px;
+    }
+
+    button {
+      min-height: 47px;
+      padding: 10px 12px;
+      border: none;
+      border-radius: 12px;
+      font-size: 0.96rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition:
+        transform 0.15s ease,
+        filter 0.15s ease,
+        background 0.15s ease;
+    }
+
+    button:hover {
+      filter: brightness(1.08);
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    .primary-button {
+      color: #172033;
+      background: linear-gradient(180deg, #ffe19b, #eeb444);
+    }
+
+    .contact-button {
+      color: #f4f8ff;
+      background: linear-gradient(180deg, #347bb1, #1d527c);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .contact-button.active {
+      color: #092518;
+      background: linear-gradient(180deg, #a3f2bd, #65ce8b);
+    }
+
+    .stop-button {
+      color: white;
+      background: linear-gradient(180deg, #a6403c, #762421);
+    }
+
+    .mute-button {
+      color: white;
+      background: linear-gradient(180deg, #655c83, #433b5c);
+    }
+
+    .readout-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .readout {
+      min-height: 88px;
+      padding: 12px;
+      border-radius: 13px;
+      text-align: center;
+      background: rgba(255, 255, 255, 0.065);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .readout-label {
+      display: block;
+      margin-bottom: 5px;
+      color: #b9d5ed;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+
+    .readout-number {
+      display: block;
+      color: white;
+      font-size: 1.45rem;
+      font-weight: bold;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .readout-note {
+      color: var(--gold-light);
+    }
+
+    .wave-panel {
+      margin-top: 17px;
+      padding: 12px;
+      border-radius: 14px;
+      background: rgba(0, 0, 0, 0.18);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .wave-panel h3 {
+      margin: 0 0 8px;
+      color: #d8edff;
+      font-size: 0.95rem;
+    }
+
+    #waveCanvas {
+      width: 100%;
+      min-height: 95px;
+      height: 95px;
+      border-radius: 9px;
+      background: #06101f;
+    }
+
+    .history {
+      width: min(1180px, calc(100% - 24px));
+      margin: 0 auto 35px;
+      padding: 20px 23px;
+    }
+
+    .history h2 {
+      margin: 0 0 10px;
+      color: var(--gold-light);
+      font-family: Georgia, "Times New Roman", serif;
+    }
+
+    .history p {
+      margin: 7px 0;
+      line-height: 1.55;
+      color: #e1edf8;
+    }
+
+    .history .question {
+      margin-top: 15px;
+      padding: 13px 15px;
+      border-left: 4px solid var(--gold);
+      border-radius: 8px;
+      background: rgba(243, 189, 82, 0.09);
+      color: #fff2c9;
+    }
+
+    @media (max-width: 860px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+
+      .wheel-stage,
+      canvas {
+        min-height: 500px;
+      }
+    }
+
+    @media (max-width: 520px) {
+      header {
+        padding-top: 18px;
+      }
+
+      main {
+        width: min(100% - 14px, 1180px);
+        gap: 12px;
+      }
+
+      .experiment-panel,
+      .controls {
+        padding: 11px;
+      }
+
+      .wheel-stage,
+      canvas {
+        min-height: 445px;
+      }
+
+      .instruction {
+        max-width: 205px;
+        font-size: 0.74rem;
+      }
+
+      .button-row {
+        grid-template-columns: 1fr;
+      }
+
+      .readout-number {
+        font-size: 1.2rem;
+      }
+
+      .history {
+        width: min(100% - 14px, 1180px);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>Savart Wheel</h1>
+
+    <p>
+      Spin a toothed wheel against a flexible card. At low speeds, individual
+      impacts sound like separate clicks. As the wheel speeds up, the clicks
+      join together and create a musical pitch.
+    </p>
+  </header>
+
+  <main>
+    <section class="panel experiment-panel">
+      <div class="wheel-stage">
+        <canvas id="wheelCanvas"></canvas>
+
+        <div class="instruction">
+          Start the wheel, then lower the card until it touches the teeth.
+          Change the speed and number of teeth to investigate pitch.
+        </div>
+
+        <div class="status-badge" id="statusBadge">
+          Card lifted
+        </div>
+      </div>
+
+      <div class="formula">
+        <strong>Frequency</strong> =
+        number of teeth × revolutions per second
+      </div>
+    </section>
+
+    <aside class="panel controls">
+      <h2>Experiment Controls</h2>
+
+      <div class="control-group">
+        <label class="control-label" for="teethSelect">
+          <span>Number of teeth</span>
+          <span class="control-value" id="teethValue">48</span>
+        </label>
+
+        <select id="teethSelect">
+          <option value="12">12 teeth</option>
+          <option value="24">24 teeth</option>
+          <option value="36">36 teeth</option>
+          <option value="48" selected>48 teeth</option>
+          <option value="60">60 teeth</option>
+          <option value="72">72 teeth</option>
+          <option value="96">96 teeth</option>
+          <option value="120">120 teeth</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label class="control-label" for="rpmSlider">
+          <span>Wheel speed</span>
+          <span class="control-value" id="rpmValue">0 RPM</span>
+        </label>
+
+        <input
+          id="rpmSlider"
+          type="range"
+          min="0"
+          max="1200"
+          value="0"
+          step="1"
+        >
+      </div>
+
+      <div class="control-group">
+        <label class="control-label" for="volumeSlider">
+          <span>Volume</span>
+          <span class="control-value" id="volumeValue">45%</span>
+        </label>
+
+        <input
+          id="volumeSlider"
+          type="range"
+          min="0"
+          max="100"
+          value="45"
+          step="1"
+        >
+      </div>
+
+      <div class="button-row">
+        <button class="primary-button" id="startButton">
+          Start Audio
+        </button>
+
+        <button class="contact-button" id="contactButton">
+          Lower Card
+        </button>
+
+        <button class="stop-button" id="stopButton">
+          Stop Wheel
+        </button>
+
+        <button class="mute-button" id="muteButton">
+          Mute
+        </button>
+      </div>
+
+      <div class="readout-grid">
+        <div class="readout">
+          <span class="readout-label">Revolutions</span>
+          <span class="readout-number" id="rpsReadout">0.00/sec</span>
+        </div>
+
+        <div class="readout">
+          <span class="readout-label">Tooth impacts</span>
+          <span class="readout-number" id="frequencyReadout">0.0 Hz</span>
+        </div>
+
+        <div class="readout">
+          <span class="readout-label">Nearest note</span>
+          <span class="readout-number readout-note" id="noteReadout">—</span>
+        </div>
+
+        <div class="readout">
+          <span class="readout-label">Pitch difference</span>
+          <span class="readout-number" id="centsReadout">—</span>
+        </div>
+      </div>
+
+      <div class="wave-panel">
+        <h3>Tooth-impact pattern</h3>
+        <canvas id="waveCanvas"></canvas>
+      </div>
+    </aside>
+  </main>
+
+  <section class="panel history">
+    <h2>About Savart's Discovery</h2>
+
+    <p>
+      Around 1830, French physicist <strong>Félix Savart</strong> refined the
+      toothed-wheel experiment to investigate how people perceive sound. He
+      demonstrated that slowly repeated impacts are heard as separate clicks,
+      but when the impacts occur rapidly and regularly, they blend into a
+      continuous musical pitch.
+    </p>
+
+    <p>
+      Savart's experiments showed that pitch depends on the number of vibrations
+      or impacts produced each second. Increasing the wheel speed or using a
+      wheel with more teeth raises the frequency and therefore raises the pitch.
+    </p>
+
+    <div class="question">
+      <strong>Try It:</strong> Set the wheel to 24 teeth and choose a speed.
+      Then change it to 48 teeth without changing the RPM. What happens to the
+      frequency and the nearest musical note?
+    </div>
+  </section>
+
+  <script>
+    "use strict";
+
+    const wheelCanvas = document.getElementById("wheelCanvas");
+    const wheelContext = wheelCanvas.getContext("2d");
+
+    const waveCanvas = document.getElementById("waveCanvas");
+    const waveContext = waveCanvas.getContext("2d");
+
+    const teethSelect = document.getElementById("teethSelect");
+    const rpmSlider = document.getElementById("rpmSlider");
+    const volumeSlider = document.getElementById("volumeSlider");
+
+    const teethValue = document.getElementById("teethValue");
+    const rpmValue = document.getElementById("rpmValue");
+    const volumeValue = document.getElementById("volumeValue");
+
+    const rpsReadout = document.getElementById("rpsReadout");
+    const frequencyReadout = document.getElementById("frequencyReadout");
+    const noteReadout = document.getElementById("noteReadout");
+    const centsReadout = document.getElementById("centsReadout");
+
+    const startButton = document.getElementById("startButton");
+    const contactButton = document.getElementById("contactButton");
+    const stopButton = document.getElementById("stopButton");
+    const muteButton = document.getElementById("muteButton");
+    const statusBadge = document.getElementById("statusBadge");
+
+    let teeth = Number(teethSelect.value);
+    let rpm = Number(rpmSlider.value);
+    let volume = Number(volumeSlider.value) / 100;
+
+    let angle = 0;
+    let lastFrameTime = performance.now();
+
+    let cardTouching = false;
+    let muted = false;
+
+    let audioContext = null;
+    let masterGain = null;
+    let soundSource = null;
+
+    function resizeCanvas(canvas, context) {
+      const rectangle = canvas.getBoundingClientRect();
+      const scale = window.devicePixelRatio || 1;
+
+      canvas.width = Math.round(rectangle.width * scale);
+      canvas.height = Math.round(rectangle.height * scale);
+
+      context.setTransform(scale, 0, 0, scale, 0, 0);
+    }
+
+    function resizeAllCanvases() {
+      resizeCanvas(wheelCanvas, wheelContext);
+      resizeCanvas(waveCanvas, waveContext);
+    }
+
+    function getFrequency() {
+      const revolutionsPerSecond = rpm / 60;
+      return teeth * revolutionsPerSecond;
+    }
+
+    function getNoteInformation(frequency) {
+      if (frequency < 16) {
+        return {
+          note: "Clicks",
+          cents: "Below pitch range"
+        };
+      }
+
+      const midiNumber = Math.round(69 + 12 * Math.log2(frequency / 440));
+      const noteFrequency = 440 * Math.pow(2, (midiNumber - 69) / 12);
+      const cents = 1200 * Math.log2(frequency / noteFrequency);
+
+      const noteNames = [
+        "C", "C♯", "D", "D♯", "E", "F",
+        "F♯", "G", "G♯", "A", "A♯", "B"
+      ];
+
+      const noteName = noteNames[
+        ((midiNumber % 12) + 12) % 12
+      ];
+
+      const octave = Math.floor(midiNumber / 12) - 1;
+
+      return {
+        note: `${noteName}${octave}`,
+        cents: `${cents >= 0 ? "+" : ""}${cents.toFixed(1)} cents`
+      };
+    }
+
+    function updateReadouts() {
+      const revolutionsPerSecond = rpm / 60;
+      const frequency = getFrequency();
+      const noteInformation = getNoteInformation(frequency);
+
+      teethValue.textContent = teeth;
+      rpmValue.textContent = `${rpm} RPM`;
+      volumeValue.textContent = `${Math.round(volume * 100)}%`;
+
+      rpsReadout.textContent = `${revolutionsPerSecond.toFixed(2)}/sec`;
+      frequencyReadout.textContent = `${frequency.toFixed(1)} Hz`;
+
+      if (rpm === 0 || !cardTouching) {
+        noteReadout.textContent = "—";
+        centsReadout.textContent = "—";
+      } else {
+        noteReadout.textContent = noteInformation.note;
+        centsReadout.textContent = noteInformation.cents;
+      }
+
+      drawWaveform();
+    }
+
+
+    function drawWheel() {
+      const width = wheelCanvas.clientWidth;
+      const height = wheelCanvas.clientHeight;
+
+      wheelContext.clearRect(0, 0, width, height);
+
+      const scale = Math.min(width / 760, height / 570);
+      const originX = (width - 760 * scale) / 2;
+      const originY = (height - 570 * scale) / 2;
+
+      wheelContext.save();
+      wheelContext.translate(originX, originY);
+      wheelContext.scale(scale, scale);
+
+      drawWorkshopBackground();
+      drawWoodenFrame();
+      drawDriveWheel();
+      drawPulleySystem();
+      drawToothedWheel();
+      drawFlexibleCard();
+      drawLabels();
+
+      wheelContext.restore();
+    }
+
+    function drawWorkshopBackground() {
+      const background = wheelContext.createLinearGradient(0, 0, 0, 570);
+      background.addColorStop(0, "#173754");
+      background.addColorStop(0.64, "#0b2137");
+      background.addColorStop(1, "#071521");
+
+      wheelContext.fillStyle = background;
+      wheelContext.fillRect(0, 0, 760, 570);
+
+      wheelContext.strokeStyle = "rgba(255,255,255,0.035)";
+      wheelContext.lineWidth = 1;
+
+      for (let x = 0; x <= 760; x += 28) {
+        wheelContext.beginPath();
+        wheelContext.moveTo(x, 0);
+        wheelContext.lineTo(x, 570);
+        wheelContext.stroke();
+      }
+
+      for (let y = 0; y <= 570; y += 28) {
+        wheelContext.beginPath();
+        wheelContext.moveTo(0, y);
+        wheelContext.lineTo(760, y);
+        wheelContext.stroke();
+      }
+    }
+
+    function drawWoodPlank(x, y, width, height, radius = 7) {
+      const wood = wheelContext.createLinearGradient(x, y, x, y + height);
+      wood.addColorStop(0, "#9a6838");
+      wood.addColorStop(0.5, "#704722");
+      wood.addColorStop(1, "#4a2c15");
+
+      wheelContext.fillStyle = wood;
+      wheelContext.strokeStyle = "#2c190c";
+      wheelContext.lineWidth = 3;
+
+      wheelContext.beginPath();
+      wheelContext.roundRect(x, y, width, height, radius);
+      wheelContext.fill();
+      wheelContext.stroke();
+
+      wheelContext.strokeStyle = "rgba(255,220,155,0.16)";
+      wheelContext.lineWidth = 1.2;
+
+      for (let line = 10; line < height; line += 11) {
+        wheelContext.beginPath();
+        wheelContext.moveTo(x + 8, y + line);
+        wheelContext.bezierCurveTo(
+          x + width * 0.3,
+          y + line - 4,
+          x + width * 0.65,
+          y + line + 4,
+          x + width - 8,
+          y + line
+        );
+        wheelContext.stroke();
+      }
+    }
+
+    function drawWoodenFrame() {
+      drawWoodPlank(78, 372, 606, 72, 8);
+      drawWoodPlank(105, 440, 42, 102, 5);
+      drawWoodPlank(612, 440, 42, 102, 5);
+      drawWoodPlank(132, 505, 500, 27, 5);
+
+      wheelContext.fillStyle = "#b88a53";
+      wheelContext.strokeStyle = "#3d2513";
+      wheelContext.lineWidth = 2;
+
+      for (const bolt of [
+        [112, 404], [650, 404], [185, 404], [572, 404]
+      ]) {
+        wheelContext.beginPath();
+        wheelContext.arc(bolt[0], bolt[1], 5, 0, Math.PI * 2);
+        wheelContext.fill();
+        wheelContext.stroke();
+      }
+    }
+
+    function drawWheelRim(cx, cy, radius, rotation, spokeCount, rimWidth) {
+      wheelContext.save();
+      wheelContext.translate(cx, cy);
+      wheelContext.rotate(rotation);
+
+      const rimGradient = wheelContext.createRadialGradient(
+        -radius * 0.35,
+        -radius * 0.35,
+        radius * 0.15,
+        0,
+        0,
+        radius
+      );
+
+      rimGradient.addColorStop(0, "#c28a4c");
+      rimGradient.addColorStop(0.55, "#865226");
+      rimGradient.addColorStop(1, "#39200f");
+
+      wheelContext.strokeStyle = rimGradient;
+      wheelContext.lineWidth = rimWidth;
+      wheelContext.beginPath();
+      wheelContext.arc(0, 0, radius - rimWidth / 2, 0, Math.PI * 2);
+      wheelContext.stroke();
+
+      wheelContext.strokeStyle = "#b3773d";
+      wheelContext.lineWidth = Math.max(8, rimWidth * 0.34);
+      wheelContext.lineCap = "round";
+
+      for (let spoke = 0; spoke < spokeCount; spoke += 1) {
+        const spokeAngle = (Math.PI * 2 * spoke) / spokeCount;
+        wheelContext.beginPath();
+        wheelContext.moveTo(
+          Math.cos(spokeAngle) * radius * 0.17,
+          Math.sin(spokeAngle) * radius * 0.17
+        );
+        wheelContext.lineTo(
+          Math.cos(spokeAngle) * radius * 0.76,
+          Math.sin(spokeAngle) * radius * 0.76
+        );
+        wheelContext.stroke();
+      }
+
+      wheelContext.fillStyle = "#5a3920";
+      wheelContext.strokeStyle = "#d0a56d";
+      wheelContext.lineWidth = 4;
+      wheelContext.beginPath();
+      wheelContext.arc(0, 0, radius * 0.18, 0, Math.PI * 2);
+      wheelContext.fill();
+      wheelContext.stroke();
+
+      wheelContext.fillStyle = "#1d1712";
+      wheelContext.beginPath();
+      wheelContext.arc(0, 0, radius * 0.07, 0, Math.PI * 2);
+      wheelContext.fill();
+
+      wheelContext.restore();
+    }
+
+    function drawDriveWheel() {
+      drawWheelRim(242, 255, 145, angle, 10, 28);
+
+      wheelContext.fillStyle = "#5f4938";
+      wheelContext.strokeStyle = "#22170f";
+      wheelContext.lineWidth = 3;
+      wheelContext.beginPath();
+      wheelContext.roundRect(222, 250, 40, 133, 5);
+      wheelContext.fill();
+      wheelContext.stroke();
+
+      wheelContext.fillStyle = "#b7a58c";
+      wheelContext.beginPath();
+      wheelContext.arc(242, 255, 13, 0, Math.PI * 2);
+      wheelContext.fill();
+    }
+
+
+    function drawPulleySystem() {
+      const pulleyRotation = angle * 1.75;
+      drawWheelRim(445, 310, 70, pulleyRotation, 8, 16);
+
+      wheelContext.fillStyle = "#544337";
+      wheelContext.strokeStyle = "#21170f";
+      wheelContext.lineWidth = 3;
+      wheelContext.beginPath();
+      wheelContext.roundRect(430, 303, 30, 77, 4);
+      wheelContext.fill();
+      wheelContext.stroke();
+
+      drawContinuousBelt();
+    }
+
+    function drawContinuousBelt() {
+      /*
+        One continuous belt runs around:
+        1. the large wooden drive wheel,
+        2. the smaller wooden pulley,
+        3. the center pulley of the toothed wheel.
+
+        The points below are tangent-like contact points chosen to make the belt
+        look as though it is actually seated in the grooves of all three wheels.
+      */
+      const beltPoints = [
+        { x: 157, y: 139 },  // upper-left contact on large wheel
+        { x: 326, y: 150 },  // upper-right contact on large wheel
+        { x: 493, y: 253 },  // upper-right contact on middle wheel
+        { x: 587, y: 294 },  // upper contact on toothed-wheel hub
+        { x: 616, y: 329 },  // lower-right contact on toothed-wheel hub
+        { x: 500, y: 349 },  // lower-right contact on middle wheel
+        { x: 390, y: 360 },  // lower-left contact on middle wheel
+        { x: 171, y: 373 }   // lower contact returning to large wheel
+      ];
+
+      wheelContext.save();
+
+      // Dark outer edge gives the belt thickness and depth.
+      wheelContext.strokeStyle = "#120f0d";
+      wheelContext.lineWidth = 13;
+      wheelContext.lineJoin = "round";
+      wheelContext.lineCap = "round";
+      wheelContext.beginPath();
+      wheelContext.moveTo(beltPoints[0].x, beltPoints[0].y);
+
+      // Top run from large wheel to middle wheel.
+      wheelContext.bezierCurveTo(
+        228, 125,
+        294, 134,
+        beltPoints[1].x,
+        beltPoints[1].y
+      );
+
+      wheelContext.lineTo(beltPoints[2].x, beltPoints[2].y);
+
+      // Upper run from middle wheel to toothed-wheel hub.
+      wheelContext.bezierCurveTo(
+        526, 267,
+        556, 281,
+        beltPoints[3].x,
+        beltPoints[3].y
+      );
+
+      // Wrap around the center hub of toothed wheel.
+      wheelContext.bezierCurveTo(
+        625, 300,
+        628, 318,
+        beltPoints[4].x,
+        beltPoints[4].y
+      );
+
+      // Lower run back toward middle wooden wheel.
+      wheelContext.bezierCurveTo(
+        579, 339,
+        541, 346,
+        beltPoints[5].x,
+        beltPoints[5].y
+      );
+
+      // Wrap around lower half of middle wheel.
+      wheelContext.bezierCurveTo(
+        472, 374,
+        425, 377,
+        beltPoints[6].x,
+        beltPoints[6].y
+      );
+
+      // Lower return toward large wheel.
+      wheelContext.lineTo(beltPoints[7].x, beltPoints[7].y);
+
+      // Wrap around the left side of the large wooden wheel.
+      wheelContext.bezierCurveTo(
+        100, 337,
+        93, 198,
+        beltPoints[0].x,
+        beltPoints[0].y
+      );
+
+      wheelContext.closePath();
+      wheelContext.stroke();
+
+      // Main leather belt surface.
+      wheelContext.strokeStyle = rpm > 650
+        ? "rgba(91, 77, 62, 0.84)"
+        : "#4b4034";
+      wheelContext.lineWidth = 8;
+      wheelContext.stroke();
+
+      // Moving highlight indicates belt direction.
+      if (rpm > 0) {
+        wheelContext.setLineDash([18, 14]);
+        wheelContext.lineDashOffset = -(angle * 58);
+        wheelContext.strokeStyle = "rgba(235, 211, 169, 0.30)";
+        wheelContext.lineWidth = 2.2;
+        wheelContext.stroke();
+      }
+
+      wheelContext.restore();
+
+      drawPulleyGrooves();
+    }
+
+    function drawPulleyGrooves() {
+      wheelContext.save();
+
+      // Groove on the large wooden drive wheel.
+      wheelContext.strokeStyle = "rgba(24, 17, 11, 0.86)";
+      wheelContext.lineWidth = 5;
+      wheelContext.beginPath();
+      wheelContext.arc(242, 255, 132, 0, Math.PI * 2);
+      wheelContext.stroke();
+
+      // Groove on the middle wooden wheel.
+      wheelContext.lineWidth = 4;
+      wheelContext.beginPath();
+      wheelContext.arc(445, 310, 61, 0, Math.PI * 2);
+      wheelContext.stroke();
+
+      // Small center pulley mounted on the toothed wheel axle.
+      const hubGradient = wheelContext.createRadialGradient(
+        592, 302, 2,
+        602, 315, 24
+      );
+      hubGradient.addColorStop(0, "#d6b47d");
+      hubGradient.addColorStop(0.45, "#85643c");
+      hubGradient.addColorStop(1, "#2f2418");
+
+      wheelContext.fillStyle = hubGradient;
+      wheelContext.strokeStyle = "#dcc69f";
+      wheelContext.lineWidth = 3;
+      wheelContext.beginPath();
+      wheelContext.arc(602, 315, 23, 0, Math.PI * 2);
+      wheelContext.fill();
+      wheelContext.stroke();
+
+      // Belt groove around the toothed-wheel hub.
+      wheelContext.strokeStyle = "#251b12";
+      wheelContext.lineWidth = 5;
+      wheelContext.beginPath();
+      wheelContext.arc(602, 315, 18, 0, Math.PI * 2);
+      wheelContext.stroke();
+
+      wheelContext.restore();
+    }
+
+    function drawToothedWheel() {
+      const cx = 602;
+      const cy = 315;
+      const displayTeeth = Math.min(teeth, 72);
+      const innerRadius = 53;
+      const outerRadius = 62;
+
+      wheelContext.save();
+      wheelContext.translate(cx, cy);
+      wheelContext.rotate(angle * 3.2);
+
+      wheelContext.beginPath();
+
+      for (let index = 0; index < displayTeeth; index += 1) {
+        const a0 = (Math.PI * 2 * index) / displayTeeth;
+        const a1 = (Math.PI * 2 * (index + 0.25)) / displayTeeth;
+        const a2 = (Math.PI * 2 * (index + 0.72)) / displayTeeth;
+        const a3 = (Math.PI * 2 * (index + 1)) / displayTeeth;
+
+        const points = [
+          [a0, innerRadius],
+          [a1, outerRadius],
+          [a2, outerRadius],
+          [a3, innerRadius]
+        ];
+
+        for (let point = 0; point < points.length; point += 1) {
+          const x = Math.cos(points[point][0]) * points[point][1];
+          const y = Math.sin(points[point][0]) * points[point][1];
+
+          if (index === 0 && point === 0) {
+            wheelContext.moveTo(x, y);
+          } else {
+            wheelContext.lineTo(x, y);
+          }
+        }
+      }
+
+      wheelContext.closePath();
+
+      const gearGradient = wheelContext.createRadialGradient(
+        -18, -20, 3, 0, 0, outerRadius
+      );
+      gearGradient.addColorStop(0, "#d7c5a2");
+      gearGradient.addColorStop(0.42, "#726a5d");
+      gearGradient.addColorStop(1, "#24211d");
+
+      wheelContext.fillStyle = gearGradient;
+      wheelContext.strokeStyle = "#e7d8b8";
+      wheelContext.lineWidth = 1.4;
+      wheelContext.fill();
+      wheelContext.stroke();
+
+      wheelContext.fillStyle = "#151515";
+      wheelContext.beginPath();
+      wheelContext.arc(0, 0, 39, 0, Math.PI * 2);
+      wheelContext.fill();
+
+      wheelContext.strokeStyle = "#91897b";
+      wheelContext.lineWidth = 7;
+
+      for (let spoke = 0; spoke < 8; spoke += 1) {
+        const spokeAngle = (Math.PI * 2 * spoke) / 8;
+        wheelContext.beginPath();
+        wheelContext.moveTo(
+          Math.cos(spokeAngle) * 14,
+          Math.sin(spokeAngle) * 14
+        );
+        wheelContext.lineTo(
+          Math.cos(spokeAngle) * 36,
+          Math.sin(spokeAngle) * 36
+        );
+        wheelContext.stroke();
+      }
+
+      wheelContext.fillStyle = "#766b5a";
+      wheelContext.strokeStyle = "#d5c5a8";
+      wheelContext.lineWidth = 3;
+      wheelContext.beginPath();
+      wheelContext.arc(0, 0, 16, 0, Math.PI * 2);
+      wheelContext.fill();
+      wheelContext.stroke();
+
+      wheelContext.restore();
+
+      wheelContext.fillStyle = "#504238";
+      wheelContext.strokeStyle = "#20150d";
+      wheelContext.lineWidth = 3;
+      wheelContext.beginPath();
+      wheelContext.roundRect(586, 314, 32, 68, 4);
+      wheelContext.fill();
+      wheelContext.stroke();
+    }
+
+    function drawFlexibleCard() {
+      const contactX = 602;
+      const contactY = 252;
+      const topX = 552;
+      const topY = 112;
+
+      const cardTipX = cardTouching
+        ? contactX
+        : contactX - 27;
+
+      const cardTipY = cardTouching
+        ? contactY
+        : contactY - 37;
+
+      wheelContext.save();
+
+      wheelContext.fillStyle = "#6a4b2d";
+      wheelContext.strokeStyle = "#2d1b0e";
+      wheelContext.lineWidth = 3;
+      wheelContext.beginPath();
+      wheelContext.roundRect(topX - 12, topY - 14, 25, 165, 5);
+      wheelContext.fill();
+      wheelContext.stroke();
+
+      wheelContext.strokeStyle = cardTouching
+        ? "#f4e2b1"
+        : "#cbd4dc";
+      wheelContext.lineWidth = 11;
+      wheelContext.lineCap = "round";
+
+      wheelContext.beginPath();
+      wheelContext.moveTo(topX, topY);
+
+      const vibration = cardTouching && rpm > 0
+        ? Math.sin(angle * Math.max(10, teeth / 2)) * 4
+        : 0;
+
+      wheelContext.bezierCurveTo(
+        topX + 8,
+        topY + 58,
+        cardTipX - 18 + vibration,
+        cardTipY - 32,
+        cardTipX,
+        cardTipY
+      );
+      wheelContext.stroke();
+
+      wheelContext.strokeStyle = "#6a6254";
+      wheelContext.lineWidth = 2;
+      wheelContext.stroke();
+
+      wheelContext.fillStyle = "#b4864b";
+      wheelContext.strokeStyle = "#382314";
+      wheelContext.lineWidth = 2;
+      wheelContext.beginPath();
+      wheelContext.arc(topX, topY + 34, 10, 0, Math.PI * 2);
+      wheelContext.fill();
+      wheelContext.stroke();
+
+      if (cardTouching && rpm > 0) {
+        wheelContext.strokeStyle = "rgba(255,225,140,0.88)";
+        wheelContext.lineWidth = 2;
+
+        for (let spark = 0; spark < 3; spark += 1) {
+          wheelContext.beginPath();
+          wheelContext.moveTo(contactX + 4, contactY + spark * 5);
+          wheelContext.lineTo(
+            contactX + 18 + spark * 2,
+            contactY - 4 + spark * 5
+          );
+          wheelContext.stroke();
+        }
+      }
+
+      wheelContext.restore();
+    }
+
+    function drawLabels() {
+      wheelContext.save();
+      wheelContext.font = "bold 15px Arial";
+      wheelContext.fillStyle = "rgba(232,244,255,0.86)";
+      wheelContext.textAlign = "center";
+
+      wheelContext.fillText("WOODEN DRIVE WHEEL", 242, 52);
+      wheelContext.fillText(`${teeth} TOOTH WHEEL`, 602, 218);
+
+      wheelContext.font = "13px Arial";
+      wheelContext.fillStyle = "rgba(210,226,239,0.78)";
+      wheelContext.fillText("belt-driven pulley", 445, 406);
+
+      wheelContext.restore();
+    }
+
+    function drawMotionArrow() {
+      // Motion is now shown by rotating spokes, pulleys, gear teeth, and moving belts.
+    }
+
+    function drawWaveform() {
+      const width = waveCanvas.clientWidth;
+      const height = waveCanvas.clientHeight;
+
+      waveContext.clearRect(0, 0, width, height);
+      waveContext.fillStyle = "#06101f";
+      waveContext.fillRect(0, 0, width, height);
+
+      const frequency = getFrequency();
+
+      waveContext.strokeStyle = "rgba(255, 255, 255, 0.13)";
+      waveContext.lineWidth = 1;
+
+      waveContext.beginPath();
+      waveContext.moveTo(0, height / 2);
+      waveContext.lineTo(width, height / 2);
+      waveContext.stroke();
+
+      if (!cardTouching || frequency === 0) {
+        waveContext.fillStyle = "#91abc2";
+        waveContext.font = "13px Arial";
+        waveContext.textAlign = "center";
+        waveContext.fillText(
+          cardTouching ? "Wheel is stopped" : "Lower the card to create impacts",
+          width / 2,
+          height / 2 + 5
+        );
+        return;
+      }
+
+      waveContext.strokeStyle = "#f3bd52";
+      waveContext.lineWidth = 2;
+      waveContext.beginPath();
+
+      const visiblePulses = Math.min(70, Math.max(2, frequency / 6));
+      const pulseSpacing = width / visiblePulses;
+
+      waveContext.moveTo(0, height * 0.7);
+
+      for (let pulse = 0; pulse <= visiblePulses; pulse += 1) {
+        const x = pulse * pulseSpacing;
+
+        waveContext.lineTo(x, height * 0.7);
+        waveContext.lineTo(x + 1, height * 0.2);
+        waveContext.lineTo(x + Math.min(6, pulseSpacing * 0.35), height * 0.7);
+      }
+
+      waveContext.stroke();
+    }
+
+    function animate(currentTime) {
+      const elapsedSeconds = Math.min(
+        0.05,
+        (currentTime - lastFrameTime) / 1000
+      );
+
+      lastFrameTime = currentTime;
+
+      const revolutionsPerSecond = rpm / 60;
+      angle += revolutionsPerSecond * Math.PI * 2 * elapsedSeconds;
+
+      if (angle > Math.PI * 2) {
+        angle %= Math.PI * 2;
+      }
+
+      drawWheel();
+      requestAnimationFrame(animate);
+    }
+
+    async function initializeAudio() {
+      if (!audioContext) {
+        audioContext = new (
+          window.AudioContext || window.webkitAudioContext
+        )();
+
+        masterGain = audioContext.createGain();
+        masterGain.gain.value = 0;
+        masterGain.connect(audioContext.destination);
+      }
+
+      if (audioContext.state === "suspended") {
+        await audioContext.resume();
+      }
+
+      startButton.textContent = "Audio Ready";
+      updateSound();
+    }
+
+    function stopSoundSource() {
+      if (soundSource) {
+        try {
+          soundSource.stop();
+        } catch (error) {
+          // The source may already be stopped.
+        }
+
+        soundSource.disconnect();
+        soundSource = null;
+      }
+    }
+
+    function createImpactBuffer(frequency) {
+      const sampleRate = audioContext.sampleRate;
+
+      /*
+        A one-second loop makes each tooth impact occur at a regular interval.
+        At low frequencies, the result sounds like separate clicks.
+        At higher frequencies, the repeated impulses form a pitch.
+      */
+      const bufferLength = sampleRate;
+      const buffer = audioContext.createBuffer(
+        1,
+        bufferLength,
+        sampleRate
+      );
+
+      const channel = buffer.getChannelData(0);
+      const samplesPerImpact = sampleRate / frequency;
+      const impactLength = Math.max(
+        8,
+        Math.min(130, Math.floor(sampleRate * 0.003))
+      );
+
+      for (
+        let impactStart = 0;
+        impactStart < bufferLength;
+        impactStart += samplesPerImpact
+      ) {
+        const startSample = Math.floor(impactStart);
+
+        for (
+          let sample = 0;
+          sample < impactLength &&
+          startSample + sample < bufferLength;
+          sample += 1
+        ) {
+          const decay = Math.exp(-sample / (impactLength * 0.2));
+          const noise = Math.random() * 2 - 1;
+          const sharpImpulse = sample === 0 ? 1 : 0;
+
+          channel[startSample + sample] +=
+            (noise * 0.5 + sharpImpulse * 0.85) * decay;
+        }
+      }
+
+      return buffer;
+    }
+
+    function updateSound() {
+      if (!audioContext || !masterGain) {
+        return;
+      }
+
+      const frequency = getFrequency();
+
+      stopSoundSource();
+
+      const shouldPlay =
+        cardTouching &&
+        rpm > 0 &&
+        frequency >= 1 &&
+        !muted;
+
+      const targetVolume = shouldPlay
+        ? volume * 0.42
+        : 0;
+
+      masterGain.gain.cancelScheduledValues(audioContext.currentTime);
+      masterGain.gain.setTargetAtTime(
+        targetVolume,
+        audioContext.currentTime,
+        0.025
+      );
+
+      if (!shouldPlay) {
+        return;
+      }
+
+      soundSource = audioContext.createBufferSource();
+      soundSource.buffer = createImpactBuffer(frequency);
+      soundSource.loop = true;
+      soundSource.connect(masterGain);
+      soundSource.start();
+    }
+
+    function setCardContact(touching) {
+      cardTouching = touching;
+
+      contactButton.textContent = touching
+        ? "Lift Card"
+        : "Lower Card";
+
+      contactButton.classList.toggle("active", touching);
+      statusBadge.classList.toggle("touching", touching);
+
+      statusBadge.textContent = touching
+        ? "Card touching wheel"
+        : "Card lifted";
+
+      updateReadouts();
+      updateSound();
+    }
+
+    teethSelect.addEventListener("change", () => {
+      teeth = Number(teethSelect.value);
+      updateReadouts();
+      updateSound();
+    });
+
+    rpmSlider.addEventListener("input", () => {
+      rpm = Number(rpmSlider.value);
+      updateReadouts();
+    });
+
+    rpmSlider.addEventListener("change", () => {
+      updateSound();
+    });
+
+    volumeSlider.addEventListener("input", () => {
+      volume = Number(volumeSlider.value) / 100;
+      updateReadouts();
+
+      if (masterGain && audioContext) {
+        const targetVolume =
+          cardTouching && rpm > 0 && !muted
+            ? volume * 0.42
+            : 0;
+
+        masterGain.gain.setTargetAtTime(
+          targetVolume,
+          audioContext.currentTime,
+          0.02
+        );
+      }
+    });
+
+    startButton.addEventListener("click", initializeAudio);
+
+    contactButton.addEventListener("click", async () => {
+      if (!audioContext) {
+        await initializeAudio();
+      }
+
+      setCardContact(!cardTouching);
+    });
+
+    stopButton.addEventListener("click", () => {
+      rpm = 0;
+      rpmSlider.value = "0";
+      updateReadouts();
+      updateSound();
+    });
+
+    muteButton.addEventListener("click", () => {
+      muted = !muted;
+      muteButton.textContent = muted ? "Unmute" : "Mute";
+      updateSound();
+    });
+
+    window.addEventListener("resize", resizeAllCanvases);
+
+    resizeAllCanvases();
+    updateReadouts();
+    requestAnimationFrame(animate);
+  </script>
+</body>
+</html>
